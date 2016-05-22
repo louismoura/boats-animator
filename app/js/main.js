@@ -33,6 +33,9 @@ var width  = 640,
     btnCaptureFrame    = document.querySelector("#btn-capture-frame"),
     btnDeleteLastFrame = document.querySelector("#btn-delete-last-frame"),
 
+    // Preview area zoom
+    scale = 1;
+
     // Playback
     frameRate        = 15,
     isPlaying        = false,
@@ -336,6 +339,18 @@ function startup() {
       var imageID = parseInt(e.target.id.match(/^img-(\d+)$/)[1], 10);
       _displayFrame(imageID);
     }
+  });
+
+  // Mousewheel + ctrl zooms in the preview area
+  captureWindow.addEventListener("wheel", function(e) {
+    if (e.ctrlKey) {
+      changePreviewScale(scale + e.wheelDelta / 500);
+    }
+  });
+
+  // A double click reset the preview zoom
+  captureWindow.addEventListener("dblclick", function(){
+    changePreviewScale(1);
   });
 }
 window.onload = startup;
@@ -697,6 +712,45 @@ function _frameReelScroll() {
         // Scroll to end when playback has stopped
         frameReelArea.scrollLeft = frameReelArea.scrollWidth;
     }
+}
+
+/**
+ * Change the size of the preview video feed
+ * @param {Integer} newScale The scale compared to the image's
+ *                           original size to make the preview feed.
+ */
+function changePreviewScale(newScale) {
+  if (newScale < 0.25) {
+    // Minimum scale
+    scale = 0.25;
+  } else if (newScale > 8) {
+    // Maximum scale
+    scale = 8;
+  } else {
+    scale = newScale;
+  }
+
+  if (scale >= 1) {
+    // Zooming in
+    preview.style.width = `${100 * scale}%`;
+    preview.style.height = `${100 * scale}%`;
+    preview.style.transform = "scale(1, 1)";
+
+    // Scroll to the center of the preview feed
+    captureWindow.scrollLeft = preview.getBoundingClientRect().width / 2 - captureWindow.clientWidth / 2;
+    captureWindow.scrollTop = preview.getBoundingClientRect().height / 2 - captureWindow.clientHeight / 2;
+  } else {
+    // Zooming out
+    preview.style.width = "100%";
+    preview.style.height = "100%";
+    preview.style.transform = `scale(${scale}, ${scale})`;
+  }
+  /**
+   * ----TODO:----
+   * Fix onion skinning
+   * Zoom where mouse is rather than from center? maybe
+   * Pinch to zoom
+   */
 }
 
 /**
