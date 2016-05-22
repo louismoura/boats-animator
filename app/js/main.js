@@ -355,8 +355,8 @@ function startup() {
   });
 
   captureWindow.addEventListener("touchstart", function(e) {
-    e.preventDefault();
     if (e.touches.length > 1) {
+      e.preventDefault();
       var point1 = e.targetTouches[0],
           point2 = e.targetTouches[1],
           startDistanceX = Math.abs(parseInt(point1.clientX) - parseInt(point2.clientX)),
@@ -364,15 +364,10 @@ function startup() {
 
       // Original distance between points found with Pythagoras' Theorum (c = squareRoot(a^2 + b^2))
       startDistance = Math.sqrt(Math.pow(startDistanceX, 2) + Math.pow(startDistanceY, 2));
-
-      //scaleX = preview.getBoundingClientRect().width / preview.offsetWidth;
-      //scaleY = preview.getBoundingClientRect().height / preview.offsetHeight;
-      console.info("begin zoom");
     }
   });
 
   captureWindow.addEventListener("touchmove", function(e) {
-    e.preventDefault();
     if (e.touches.length > 1) {
       var point1         = e.targetTouches[0],
           point2         = e.targetTouches[1],
@@ -380,10 +375,10 @@ function startup() {
           finalDistanceY = Math.abs(parseInt(point1.clientY) - parseInt(point2.clientY)),
 
           // Final distance between points after pinch found with Pythagoras' Theorum (c = squareRoot(a^2 + b^2))
-          finalDistance = Math.sqrt(Math.pow(finalDistanceX, 2) + Math.pow(finalDistanceY, 2)),
+          finalDistance =  Math.sqrt(Math.pow(finalDistanceX, 2) + Math.pow(finalDistanceY, 2)),
           distanceChange = finalDistance - startDistance;
 
-      changePreviewScale(scale + (distanceChange / 1000));
+      changePreviewScale(scale + distanceChange / 1000);
     }
   });
 }
@@ -770,6 +765,11 @@ function changePreviewScale(newScale) {
     preview.style.height = `${100 * scale}%`;
     preview.style.transform = "scale(1, 1)";
 
+    // Onion skinning
+    onionSkinWindow.style.width = `${100 * scale}%`;
+    onionSkinWindow.style.height = `${100 * scale}%`;
+    onionSkinWindow.style.transform = "scale(1, 1)";
+
     // Scroll to the center of the preview feed
     captureWindow.scrollLeft = preview.getBoundingClientRect().width / 2 - captureWindow.clientWidth / 2;
     captureWindow.scrollTop = preview.getBoundingClientRect().height / 2 - captureWindow.clientHeight / 2;
@@ -778,12 +778,17 @@ function changePreviewScale(newScale) {
     preview.style.width = "100%";
     preview.style.height = "100%";
     preview.style.transform = `scale(${scale}, ${scale})`;
+
+    // Onion skinning
+    onionSkinWindow.style.width = "100%";
+    onionSkinWindow.style.height = "100%";
+    onionSkinWindow.style.transform = `scale(${scale}, ${scale})`;
   }
   /**
    * ----TODO:----
-   * Fix onion skinning
    * Zoom where mouse is rather than from center? maybe
-   * Pinch to zoom
+   * Fix bug when one finger on image and one finger on black space
+   * Display scale amount in status bar
    */
 }
 
