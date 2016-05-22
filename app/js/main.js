@@ -346,11 +346,11 @@ function startup() {
   // Mousewheel + ctrl zooms in the preview area
   captureWindow.addEventListener("wheel", function(e) {
     if (e.ctrlKey) {
-      changePreviewScale(scale + e.wheelDelta / 500);
+      changePreviewScale(scale + e.wheelDelta / 1000);
     }
   });
 
-  // A double click reset the preview zoom
+  // Double click reset the preview zoom
   captureWindow.addEventListener("dblclick", function(){
     changePreviewScale(1);
   });
@@ -380,7 +380,7 @@ function startup() {
           finalDistance  =  Math.sqrt(Math.pow(finalDistanceX, 2) + Math.pow(finalDistanceY, 2)),
           distanceChange = finalDistance - startDistance;
 
-      changePreviewScale(scale + distanceChange / 1000);
+      changePreviewScale(scale + distanceChange / 10000);
     }
   });
 }
@@ -775,7 +775,7 @@ function changePreviewScale(newScale) {
     scale = newScale;
   }
 
-  if (scale > 1.05) {
+  if (scale > 1) {
     // Zooming in
     preview.style.width = `${100 * scale}%`;
     preview.style.height = `${100 * scale}%`;
@@ -790,9 +790,6 @@ function changePreviewScale(newScale) {
     captureWindow.scrollLeft = preview.getBoundingClientRect().width / 2 - captureWindow.clientWidth / 2;
     captureWindow.scrollTop = preview.getBoundingClientRect().height / 2 - captureWindow.clientHeight / 2;
   } else {
-    if (scale >= 0.97 && scale <= 1.03) {
-      scale = 1;
-    }
     // Zooming out
     preview.style.width = "100%";
     preview.style.height = "100%";
@@ -809,7 +806,6 @@ function changePreviewScale(newScale) {
    * ----TODO:----
    * Zoom where mouse is rather than from center? maybe
    * Fix bug when one finger on image and one finger on black space
-   * Display scale amount in status bar
    */
 }
 
