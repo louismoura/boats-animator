@@ -34,7 +34,8 @@ var width  = 640,
     btnDeleteLastFrame = document.querySelector("#btn-delete-last-frame"),
 
     // Preview area zoom
-    scale = 1;
+    startDistance = 0,
+    scale = 1,
 
     // Playback
     frameRate        = 15,
@@ -351,6 +352,39 @@ function startup() {
   // A double click reset the preview zoom
   captureWindow.addEventListener("dblclick", function(){
     changePreviewScale(1);
+  });
+
+  captureWindow.addEventListener("touchstart", function(e) {
+    e.preventDefault();
+    if (e.touches.length > 1) {
+      var point1 = e.targetTouches[0],
+          point2 = e.targetTouches[1],
+          startDistanceX = Math.abs(parseInt(point1.clientX) - parseInt(point2.clientX)),
+          startDistanceY = Math.abs(parseInt(point1.clientY) - parseInt(point2.clientY));
+
+      // Original distance between points found with Pythagoras' Theorum (c = squareRoot(a^2 + b^2))
+      startDistance = Math.sqrt(Math.pow(startDistanceX, 2) + Math.pow(startDistanceY, 2));
+
+      //scaleX = preview.getBoundingClientRect().width / preview.offsetWidth;
+      //scaleY = preview.getBoundingClientRect().height / preview.offsetHeight;
+      console.info("begin zoom");
+    }
+  });
+
+  captureWindow.addEventListener("touchmove", function(e) {
+    e.preventDefault();
+    if (e.touches.length > 1) {
+      var point1         = e.targetTouches[0],
+          point2         = e.targetTouches[1],
+          finalDistanceX = Math.abs(parseInt(point1.clientX) - parseInt(point2.clientX)),
+          finalDistanceY = Math.abs(parseInt(point1.clientY) - parseInt(point2.clientY)),
+
+          // Final distance between points after pinch found with Pythagoras' Theorum (c = squareRoot(a^2 + b^2))
+          finalDistance = Math.sqrt(Math.pow(finalDistanceX, 2) + Math.pow(finalDistanceY, 2)),
+          distanceChange = finalDistance - startDistance;
+
+      changePreviewScale(scale + (distanceChange / 1000));
+    }
   });
 }
 window.onload = startup;
