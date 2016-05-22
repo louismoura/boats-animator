@@ -350,8 +350,11 @@ function startup() {
     }
   });
 
-  // Double click reset the preview zoom
-  captureWindow.addEventListener("dblclick", function(){
+  // Double clicking resets the preview area zoom
+  preview.addEventListener("dblclick", function(){
+    changePreviewScale(1);
+  });
+  onionSkinWindow.addEventListener("dblclick", function(){
     changePreviewScale(1);
   });
 
@@ -781,6 +784,9 @@ function changePreviewScale(newScale) {
     preview.style.height = `${100 * scale}%`;
     preview.style.transform = "scale(1, 1)";
 
+    captureWindow.classList.remove("zoomed-out");
+    captureWindow.classList.add("zoomed-in");
+
     // Onion skinning
     onionSkinWindow.style.width = `${100 * scale}%`;
     onionSkinWindow.style.height = `${100 * scale}%`;
@@ -794,6 +800,13 @@ function changePreviewScale(newScale) {
     preview.style.width = "100%";
     preview.style.height = "100%";
     preview.style.transform = `scale(${scale}, ${scale})`;
+
+    captureWindow.classList.remove("zoomed-in");
+    if (scale != 1) {
+      captureWindow.classList.add("zoomed-out");
+    } else {
+      captureWindow.classList.remove("zoomed-out");
+    }
 
     // Onion skinning
     onionSkinWindow.style.width = "100%";

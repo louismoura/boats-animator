@@ -187,14 +187,15 @@ a {
   border: 2px solid transparent;
 }
 
-#capture-window {
-  overflow: scroll;
-}
+#capture-window { overflow: scroll; }
 
 #capture-window.hidden,
 #playback-window.hidden { display: none; }
 
 #capture-window.active { border-color: #ad0000; }
+
+#capture-window.zoomed-out *:hover { cursor: zoom-in; }
+#capture-window.zoomed-in *:hover { cursor: zoom-out; }
 
 #preview {
   position: absolute;
