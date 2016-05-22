@@ -62,6 +62,7 @@ var width  = 640,
     statusBarCurFrame  = document.querySelector("#current-frame"),
     statusBarFrameNum  = document.querySelector("#num-of-frames"),
     statusBarFrameRate = document.querySelector("#current-frame-rate span"),
+    statusBarCurScale  = document.querySelector("#current-scale"),
 
     // Export frames
     frameExportDirectory  = null,
@@ -354,6 +355,7 @@ function startup() {
     changePreviewScale(1);
   });
 
+  // Pinch to zoom preview area
   captureWindow.addEventListener("touchstart", function(e) {
     if (e.touches.length > 1) {
       e.preventDefault();
@@ -375,7 +377,7 @@ function startup() {
           finalDistanceY = Math.abs(parseInt(point1.clientY) - parseInt(point2.clientY)),
 
           // Final distance between points after pinch found with Pythagoras' Theorum (c = squareRoot(a^2 + b^2))
-          finalDistance =  Math.sqrt(Math.pow(finalDistanceX, 2) + Math.pow(finalDistanceY, 2)),
+          finalDistance  =  Math.sqrt(Math.pow(finalDistanceX, 2) + Math.pow(finalDistanceY, 2)),
           distanceChange = finalDistance - startDistance;
 
       changePreviewScale(scale + distanceChange / 1000);
@@ -388,23 +390,37 @@ window.onload = startup;
  * Toggle between playback and capture windows.
  */
 function switchMode(newMode) {
-    "use strict";
-    winMode = newMode;
-    if (winMode === "capture") {
-        _updateStatusBarCurFrame(totalFrames + 1);
-        playbackWindow.classList.add("hidden");
-        captureWindow.classList.remove("hidden");
-        captureWindow.classList.add("active");
-        btnLiveView.classList.add("selected");
+  "use strict";
+  winMode = newMode;
+  if (winMode === "capture") {
+    // Window
+    playbackWindow.classList.add("hidden");
+    captureWindow.classList.remove("hidden");
+    captureWindow.classList.add("active");
 
-    } else if (winMode === "playback") {
-        playbackWindow.classList.remove("hidden");
-        captureWindow.classList.add("hidden");
-        captureWindow.classList.remove("active");
-        btnLiveView.classList.remove("selected");
-    }
-    console.log(`Switched to: ${winMode}`);
-    statusBarCurMode.innerHTML = winMode.charAt(0).toUpperCase() + winMode.slice(1);
+    // Frame reel
+    btnLiveView.classList.add("selected");
+
+    // Status bar
+    _updateStatusBarCurFrame(totalFrames + 1);
+    statusBarCurScale.classList.remove("hidden");
+    statusBarCurMode.parentElement.classList.remove("no-pipe");
+
+  } else if (winMode === "playback") {
+    // Window
+    playbackWindow.classList.remove("hidden");
+    captureWindow.classList.add("hidden");
+    captureWindow.classList.remove("active");
+
+    // Frame reel
+    btnLiveView.classList.remove("selected");
+
+    // Status bar
+    statusBarCurScale.classList.add("hidden");
+    statusBarCurMode.parentElement.classList.add("no-pipe");
+  }
+  console.info(`Switched to ${winMode} mode`);
+  statusBarCurMode.innerHTML = winMode.charAt(0).toUpperCase() + winMode.slice(1);
 }
 
 /**
@@ -759,7 +775,7 @@ function changePreviewScale(newScale) {
     scale = newScale;
   }
 
-  if (scale >= 1) {
+  if (scale > 1.05) {
     // Zooming in
     preview.style.width = `${100 * scale}%`;
     preview.style.height = `${100 * scale}%`;
@@ -774,6 +790,9 @@ function changePreviewScale(newScale) {
     captureWindow.scrollLeft = preview.getBoundingClientRect().width / 2 - captureWindow.clientWidth / 2;
     captureWindow.scrollTop = preview.getBoundingClientRect().height / 2 - captureWindow.clientHeight / 2;
   } else {
+    if (scale >= 0.97 && scale <= 1.03) {
+      scale = 1;
+    }
     // Zooming out
     preview.style.width = "100%";
     preview.style.height = "100%";
@@ -784,6 +803,8 @@ function changePreviewScale(newScale) {
     onionSkinWindow.style.height = "100%";
     onionSkinWindow.style.transform = `scale(${scale}, ${scale})`;
   }
+
+  statusBarCurScale.innerHTML = `${(scale * 100).toFixed(0)}%`;
   /**
    * ----TODO:----
    * Zoom where mouse is rather than from center? maybe

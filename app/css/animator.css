@@ -490,6 +490,8 @@ a {
   margin-left: 0.8em;
 }
 
+#statusBar li.hidden { display: none; }
+
 /* ========== SCROLL BARS ============== */
 
 ::-webkit-scrollbar              {
