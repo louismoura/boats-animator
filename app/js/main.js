@@ -361,24 +361,18 @@ function startup() {
     if (e.touches.length > 1) {
       e.preventDefault();
       var point1 = e.targetTouches[0],
-          point2 = e.targetTouches[1],
-          startDistanceX = Math.abs(parseInt(point1.clientX) - parseInt(point2.clientX)),
-          startDistanceY = Math.abs(parseInt(point1.clientY) - parseInt(point2.clientY));
+          point2 = e.targetTouches[1];
 
-      // Original distance between points found with Pythagoras' Theorum (c = squareRoot(a^2 + b^2))
-      startDistance = Math.sqrt(Math.pow(startDistanceX, 2) + Math.pow(startDistanceY, 2));
+      startDistance =  _getTouchPointDistance(point1, point2);
     }
   });
 
   windowContainer.addEventListener("touchmove", function(e) {
     if (e.touches.length > 1) {
+      e.preventDefault();
       var point1         = e.targetTouches[0],
           point2         = e.targetTouches[1],
-          finalDistanceX = Math.abs(parseInt(point1.clientX) - parseInt(point2.clientX)),
-          finalDistanceY = Math.abs(parseInt(point1.clientY) - parseInt(point2.clientY)),
-
-          // Final distance between points after pinch found with Pythagoras' Theorum (c = squareRoot(a^2 + b^2))
-          finalDistance  =  Math.sqrt(Math.pow(finalDistanceX, 2) + Math.pow(finalDistanceY, 2)),
+          finalDistance  = _getTouchPointDistance(point1, point2),
           distanceChange = finalDistance - startDistance;
 
       changePreviewScale(scale + distanceChange / 10000);
@@ -386,6 +380,20 @@ function startup() {
   });
 }
 window.onload = startup;
+
+/**
+ * Calculate the distance between two sets of coordinates using Pythagoras' Theorum
+ * @private
+ * @param {Object} point1 The first touch point
+ * @param {Object} point2 The second touch point
+ * @return {Integer} The distance between the two sets of coordinates
+ */
+function _getTouchPointDistance(point1, point2) {
+  var xDistance = point1.clientX - point2.clientX,
+      yDistance = point1.clientY - point2.clientY,
+      distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+  return distance;
+}
 
 /**
  * Toggle between playback and capture windows.
