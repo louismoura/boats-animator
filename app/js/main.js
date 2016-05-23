@@ -20,10 +20,11 @@ var width  = 640,
     win = nw.Window.get(),
 
     // Mode switching
-    btnLiveView    = document.querySelector("#btn-live-view"),
-    captureWindow  = document.querySelector("#capture-window"),
-    playbackWindow = document.querySelector("#playback-window"),
-    winMode        = "capture",
+    btnLiveView     = document.querySelector("#btn-live-view"),
+    windowContainer = document.querySelector("#window-container"),
+    captureWindow   = document.querySelector("#capture-window"),
+    playbackWindow  = document.querySelector("#playback-window"),
+    winMode         = "capture",
 
     // Capture
     capturedFrames     = [],
@@ -344,22 +345,19 @@ function startup() {
   });
 
   // Mousewheel + ctrl zooms in the preview area
-  captureWindow.addEventListener("wheel", function(e) {
+  windowContainer.addEventListener("wheel", function(e) {
     if (e.ctrlKey) {
       changePreviewScale(scale + e.wheelDelta / 1000);
     }
   });
 
   // Double clicking resets the preview area zoom
-  preview.addEventListener("dblclick", function(){
-    changePreviewScale(1);
-  });
-  onionSkinWindow.addEventListener("dblclick", function(){
+  windowContainer.addEventListener("dblclick", function(){
     changePreviewScale(1);
   });
 
   // Pinch to zoom preview area
-  captureWindow.addEventListener("touchstart", function(e) {
+  windowContainer.addEventListener("touchstart", function(e) {
     if (e.touches.length > 1) {
       e.preventDefault();
       var point1 = e.targetTouches[0],
@@ -372,7 +370,7 @@ function startup() {
     }
   });
 
-  captureWindow.addEventListener("touchmove", function(e) {
+  windowContainer.addEventListener("touchmove", function(e) {
     if (e.touches.length > 1) {
       var point1         = e.targetTouches[0],
           point2         = e.targetTouches[1],
@@ -397,30 +395,30 @@ function switchMode(newMode) {
   winMode = newMode;
   if (winMode === "capture") {
     // Window
-    playbackWindow.classList.add("hidden");
     captureWindow.classList.remove("hidden");
     captureWindow.classList.add("active");
+    captureWindow.scrollTop = playbackWindow.scrollTop;
+    captureWindow.scrollLeft = playbackWindow.scrollLeft;
+    playbackWindow.classList.add("hidden");
+
 
     // Frame reel
     btnLiveView.classList.add("selected");
 
     // Status bar
     _updateStatusBarCurFrame(totalFrames + 1);
-    statusBarCurScale.classList.remove("hidden");
-    statusBarCurMode.parentElement.classList.remove("no-pipe");
 
   } else if (winMode === "playback") {
     // Window
     playbackWindow.classList.remove("hidden");
+    playbackWindow.scrollTop = captureWindow.scrollTop;
+    playbackWindow.scrollLeft = captureWindow.scrollLeft;
     captureWindow.classList.add("hidden");
     captureWindow.classList.remove("active");
 
     // Frame reel
     btnLiveView.classList.remove("selected");
 
-    // Status bar
-    statusBarCurScale.classList.add("hidden");
-    statusBarCurMode.parentElement.classList.add("no-pipe");
   }
   console.info(`Switched to ${winMode} mode`);
   statusBarCurMode.innerHTML = winMode.charAt(0).toUpperCase() + winMode.slice(1);
@@ -778,40 +776,38 @@ function changePreviewScale(newScale) {
     scale = newScale;
   }
 
+  var windowContents = document.querySelectorAll("#window-container > div > *");
+
   if (scale > 1) {
-    // Zooming in
-    preview.style.width = `${100 * scale}%`;
-    preview.style.height = `${100 * scale}%`;
-    preview.style.transform = "scale(1, 1)";
-
-    captureWindow.classList.remove("zoomed-out");
-    captureWindow.classList.add("zoomed-in");
-
-    // Onion skinning
-    onionSkinWindow.style.width = `${100 * scale}%`;
-    onionSkinWindow.style.height = `${100 * scale}%`;
-    onionSkinWindow.style.transform = "scale(1, 1)";
-
-    // Scroll to the center of the preview feed
-    captureWindow.scrollLeft = preview.getBoundingClientRect().width / 2 - captureWindow.clientWidth / 2;
-    captureWindow.scrollTop = preview.getBoundingClientRect().height / 2 - captureWindow.clientHeight / 2;
-  } else {
-    // Zooming out
-    preview.style.width = "100%";
-    preview.style.height = "100%";
-    preview.style.transform = `scale(${scale}, ${scale})`;
-
-    captureWindow.classList.remove("zoomed-in");
-    if (scale != 1) {
-      captureWindow.classList.add("zoomed-out");
-    } else {
-      captureWindow.classList.remove("zoomed-out");
+    for (var i = 0; i < windowContents.length; i++) {
+      windowContents[i].style.width = `${100 * scale}%`;
+      windowContents[i].style.height = `${100 * scale}%`;
+      windowContents[i].style.transform = "scale(1, 1)";
     }
 
-    // Onion skinning
-    onionSkinWindow.style.width = "100%";
-    onionSkinWindow.style.height = "100%";
-    onionSkinWindow.style.transform = `scale(${scale}, ${scale})`;
+    windowContainer.classList.remove("zoomed-out");
+    windowContainer.classList.add("zoomed-in");
+
+    // Scroll to the center of the preview feed
+    captureWindow.scrollLeft = captureWindow.scrollWidth / 2 - captureWindow.clientWidth / 2;
+    captureWindow.scrollTop = captureWindow.scrollHeight / 2 - captureWindow.clientHeight / 2;
+    playbackWindow.scrollLeft = playbackWindow.scrollWidth / 2 - playbackWindow.clientWidth / 2;
+    playbackWindow.scrollTop = playbackWindow.scrollHeight / 2 - playbackWindow.clientHeight / 2;
+
+  } else {
+
+    for (var i = 0; i < windowContents.length; i++) {
+      windowContents[i].style.width = "100%";
+      windowContents[i].style.height = "100%";
+      windowContents[i].style.transform = `scale(${scale}, ${scale})`;
+    }
+
+    windowContainer.classList.remove("zoomed-in");
+    if (scale != 1) {
+      windowContainer.classList.add("zoomed-out");
+    } else {
+      windowContainer.classList.remove("zoomed-out");
+    }
   }
 
   statusBarCurScale.innerHTML = `${(scale * 100).toFixed(0)}%`;

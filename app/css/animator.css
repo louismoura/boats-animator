@@ -178,7 +178,7 @@ a {
 
 /* ========== VIDEO PREVIEW ============== */
 
-#capture-window, #playback-window {
+#window-container > div {
   height: calc(100vh - 200px);
   width: 100%;
   text-align: center;
@@ -187,15 +187,19 @@ a {
   border: 2px solid transparent;
 }
 
-#capture-window { overflow: scroll; }
-
-#capture-window.hidden,
-#playback-window.hidden { display: none; }
+#window-container > div.hidden { display: none; }
 
 #capture-window.active { border-color: #ad0000; }
 
-#capture-window.zoomed-out *:hover { cursor: zoom-in; }
-#capture-window.zoomed-in *:hover { cursor: zoom-out; }
+#window-container.zoomed-out > div:hover {
+  cursor: zoom-in;
+}
+#window-container.zoomed-in > div {
+  overflow: scroll;
+}
+#window-container.zoomed-in > div *:hover {
+  cursor: zoom-out;
+}
 
 #preview {
   position: absolute;
@@ -211,7 +215,6 @@ a {
 #playback {
   height: 100%;
   width: 100%;
-  max-height: calc(100vh - 200px);
   object-fit: contain;
 }
 
