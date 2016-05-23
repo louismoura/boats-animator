@@ -36,7 +36,7 @@ var width  = 640,
 
     // Preview area zoom
     startDistance = 0,
-    scale = 1,
+    scale         = 1,
 
     // Playback
     frameRate        = 15,
@@ -729,18 +729,21 @@ function _videoPlay() {
  * Preview the captured frames.
  */
 function previewCapturedFrames() {
-    "use strict";
-    // Display playback window
-    switchMode("playback");
+  "use strict";
+  // Display playback window
+  switchMode("playback");
+  if (scale > 1) {
+    changePreviewScale(1);
+  }
 
-    // Update the play/pause button
-    btnPlayPause.children[0].classList.remove("fa-play");
-    btnPlayPause.children[0].classList.add("fa-pause");
+  // Update the play/pause button
+  btnPlayPause.children[0].classList.remove("fa-play");
+  btnPlayPause.children[0].classList.add("fa-pause");
 
-    // Begin playing the frames
-    isPlaying = true;
-    _videoPlay();
-    console.info("Playback started");
+  // Begin playing the frames
+  isPlaying = true;
+  _videoPlay();
+  console.info("Playback started");
 }
 
 /**
