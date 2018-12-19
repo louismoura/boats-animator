@@ -83,6 +83,7 @@ var streaming = false,
     shortcuts     = require("./js/shortcuts"),
     notification  = require("./js/notification"),
     saveDirectory = require("./js/savedirectory"),
+    Preference = require("./js/Preference"),
 
     // Sidebar
     dirChooseDialog    = document.querySelector("#chooseDirectory"),
@@ -169,6 +170,9 @@ function startup() {
 
   // Load the keyboard shortcuts
   shortcuts.get("default");
+
+  var pref = new Preference();
+  pref.display();
 
   // Initialises the preview window
   preview.addEventListener("canplay", function() {
