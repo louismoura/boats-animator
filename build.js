@@ -45,6 +45,7 @@ var manifest = require('./package.json'),
     compress = (cmdOptions.noCompress ? false : true),
 
     options = {
+      appName: "BoatsAnimator",
       files: "temp/**",
       version: "0.35.4",
       flavor: "normal",
@@ -57,11 +58,8 @@ var manifest = require('./package.json'),
         'ProductName': 'Boats Animator',
         'LegalCopyright': "© 2019 Charlie Lee",
       },
-      winIco: "icons/icon.ico"
-      // outputDir: "bin/Boats-Animator",
-      // outputName: "Boats-Animator-{version}-{target}",
-      // outputFormat: "DIR",
-      // executableName: "BoatsAnimator",
+      winIco: "icons/icon.ico",
+      buildType: function () {return this.appVersion;}
     };
 
     var nw = new NwBuilder(options);
