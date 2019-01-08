@@ -30,6 +30,7 @@ var manifest = require('./package.json'),
     fs       = require("fs.extra"),
     curDir   = require('path').dirname(require.main.filename),
     archiver = require('archiver'),
+    NwBuilder = require("nw-builder");
 
     // Command line arguments.
     cmdArgs  = require('command-line-args'),
@@ -43,18 +44,27 @@ var manifest = require('./package.json'),
     extras = cmdOptions.extras,
     compress = (cmdOptions.noCompress ? false : true),
 
-    // nwjs-builder
-    nwjsBuilder = require("nwjs-builder"),
     options = {
-      platforms: cmdOptions.platforms,
+      files: "temp/**",
       version: "0.35.4",
-      outputDir: "bin/Boats-Animator",
-      outputName: "Boats-Animator-{version}-{target}",
-      outputFormat: "DIR",
-      executableName: "BoatsAnimator",
-      winIco: "icons/icon.ico",
-      macIcns: "icons/icon.icns"
+      flavor: "normal",
+      platforms: cmdOptions.platforms.split(","),
+      buildDir: "bin/Boats-Animator",
+      macIcns: "icons/icon.icns",
+      winVersionString: {
+        'CompanyName': "Boats Animator Developers",
+        'FileDescription': 'Boats Animator',
+        'ProductName': 'Boats Animator',
+        'LegalCopyright': "© 2019 Charlie Lee",
+      },
+      winIco: "icons/icon.ico"
+      // outputDir: "bin/Boats-Animator",
+      // outputName: "Boats-Animator-{version}-{target}",
+      // outputFormat: "DIR",
+      // executableName: "BoatsAnimator",
     };
+
+    var nw = new NwBuilder(options);
 
 if (cmdOptions.help) {
   console.log(help);
@@ -86,8 +96,9 @@ function createTemp() {
 
 // Use nwjs-builder to create the output .
 function build() {
-  nwjsBuilder.commands.nwbuild("temp", options, function(err) {
-    console.log(err ? err : "Finished exporting packages");
+
+  nw.build().then(function() {
+    console.log("Finished exporting packages");
     fs.rmrf("temp", function(err) {
       console.log(err ? err : "Delete temp directory");
 
@@ -96,7 +107,9 @@ function build() {
       mac();
       windows();
     });
-  });
+  }).catch(function(err) {
+    console.log(err);
+  })
 }
 
 // Linux specific changes.
