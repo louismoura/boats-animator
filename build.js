@@ -30,7 +30,7 @@ var manifest = require('./package.json'),
     fs       = require("fs.extra"),
     curDir   = require('path').dirname(require.main.filename),
     archiver = require('archiver'),
-    NwBuilder = require("nw-builder");
+    NwBuilder = require("nw-builder"),
 
     // Command line arguments.
     cmdArgs  = require('command-line-args'),
@@ -92,9 +92,8 @@ function createTemp() {
   });
 }
 
-// Use nwjs-builder to create the output .
+// Use nw-builder to create the output
 function build() {
-
   nw.build().then(function() {
     console.log("Finished exporting packages");
     fs.rmrf("temp", function(err) {
@@ -113,36 +112,40 @@ function build() {
 // Linux specific changes.
 function linux() {
   // Check whether output platforms contains linux32, linux64, both or neither.
-  var linuxDirs = [];
+  var linuxPlatforms = [];
   if (options.platforms.includes("linux32")) {
-    linuxDirs.push(`${options.outputDir}/Boats-Animator-${manifest.version}-linux-ia32`);
+    linuxPlatforms.push("linux32");
   }
   if (options.platforms.includes("linux64")) {
-    linuxDirs.push(`${options.outputDir}/Boats-Animator-${manifest.version}-linux-x64`);
+    linuxPlatforms.push("linux64");
   }
 
-  linuxDirs.forEach(function(dir) {
-    // Set Linux executable permissions
-    fs.chmod(`${dir}/${options.executableName}`, 0777, function(err) {
-      console.log(err ? err : `  linux${dir.slice(-2)}: Set BoatsAnimator executable file permissions`);
+  linuxPlatforms.forEach(function(platform) {
+    // Rename the output directory
+    renameOutputDir(platform)
+    .then((outputDir) => {
+      // Set Linux executable permissions
+      fs.chmod(`${outputDir}/${options.appName}`, 0777, function(err) {
+        console.log(err ? err : `  ${platform}: Set BoatsAnimator executable file permissions`);
 
-      // Create .desktop file
-      fs.writeFile(`${dir}/boats-animator.desktop`,
-  `[Desktop Entry]
-  Name=Boats Animator
-  Version=${manifest.version}
-  Comment=Create stop motion animations
-  Exec=bash -c "cd $(dirname %k) && ./${options.executableName}"
-  Type=Application
-  Terminal=false`, function(err) {
-        console.log(err ? err : `  linux${dir.slice(-2)}: Create .desktop file`);
+        // Create .desktop file
+        fs.writeFile(`${outputDir}/boats-animator.desktop`,
+        `[Desktop Entry]
+        Name=Boats Animator
+        Version=${manifest.version}
+        Comment=Create stop motion animations
+        Exec=bash -c "cd $(dirname %k) && ./${options.appName}"
+        Type=Application
+        Terminal=false`, function(err) {
+          console.log(err ? err : `  ${platform}: Create .desktop file`);
 
-        // Set .desktop file permissions
-        fs.chmod(`${dir}/boats-animator.desktop`, 0777, function(err) {
-          console.log(err ? err : `  linux${dir.slice(-2)}: Set .desktop file permissions`);
+          // Set .desktop file permissions
+          fs.chmod(`${outputDir}/boats-animator.desktop`, 0777, function(err) {
+            console.log(err ? err : `  ${platform}: Set .desktop file permissions`);
 
-          // Compress Linux dirs
-          compressDir(dir, "tar.gz");
+            // Compress Linux dirs
+            compressDir(outputDir, "tar.gz");
+          });
         });
       });
     });
@@ -152,40 +155,67 @@ function linux() {
 // Mac OS specific changes.
 function mac() {
   if (options.platforms.includes("osx64")) {
-    var macDir = `Boats-Animator-${manifest.version}-osx-x64`;
-    // Compress Mac dirs
-    compressDir(`${options.outputDir}/${macDir}`, "zip");
+    // Rename the output directory
+    renameOutputDir(platform)
+    .then((outputDir) => {
+      // Compress Mac dirs
+      compressDir(`${outputDir}`, "zip");
+    });
   }
 }
 
 // Win32 specific changes.
 function windows() {
   if (options.platforms.includes("win32")) {
-    var win32Dir = `Boats-Animator-${manifest.version}-win-ia32`;
+    // Rename the output directory
+    renameOutputDir(platform)
+    .then((outputDir) => {
+      if (process.platform === "win32" && extras.includes("exe")) {
+        // Create installer file using Inno Setup
+        fs.open("C:/Program Files (x86)/Inno Setup 5", "r", function(err, fd) {
+          if (err) {
+            console.error("  win32: Please install Inno Setup 5 to create a win32 installer");
+          } else {
+            exec(`cd C:/Program Files (x86)/Inno Setup 5/ && ISCC.exe ${curDir}/win-install/setup.iss`, function(error, stdout, stderr) {
+              if (error) {
+                console.error(`Exec error: ${error}`);
+              }
+              if (stderr) {
+                console.error(`Stderr: ${stderr}`);
+              }
+              console.log("  win32: Create setup executable");
 
-    if (process.platform === "win32" && extras.includes("exe")) {
-      // Create installer file using Inno Setup
-      fs.open("C:/Program Files (x86)/Inno Setup 5", "r", function(err, fd) {
-        if (err) {
-          console.error("  win32: Please install Inno Setup 5 to create a win32 installer");
-        } else {
-          exec(`cd C:/Program Files (x86)/Inno Setup 5/ && ISCC.exe ${curDir}/win-install/setup.iss`, function(error, stdout, stderr) {
-            if (error) {
-              console.error(`Exec error: ${error}`);
-            }
-            if (stderr) {
-              console.error(`Stderr: ${stderr}`);
-            }
-            console.log("  win32: Create setup executable");
-            // Compress the Win32 dir after setup exe is made.
-            compressDir(`${options.outputDir}/${win32Dir}`, "zip");
-          });
-        }
-      });
-    } else {
-      // Compress the Win32 dir.
-      compressDir(`${options.outputDir}/${win32Dir}`, "zip");
-    }
+              // Compress the Win32 dir after setup exe is made.
+              compressDir(`${outputDir}`, "zip");
+            });
+          }
+        });
+      } else {
+        // Compress the Win32 dir.
+        compressDir(`${outputDir}`, "zip");
+      }
+    });
+  }
+}
+
+/**
+ * Rename the output directory for a platform to the
+ * appname-version-platform format. 
+ * @param {String} platform 
+ */
+function renameOutputDir(platform) {
+  var newDirName = `${options.buildDir}/${manifest.name}-${manifest.version}-${platform}`;
+
+  return new Promise(function(resolve, reject) {
+    fs.rename(`${options.buildDir}/${platform}`, newDirName, function(err) {
+      if (err) {
+        console.error(err);
+        reject("Error renaming directory")
+      } else {
+        console.log(`  ${platform}: Renamed output directory`);
+        resolve(newDirName);
+      }
+    });
   }
 }
 
