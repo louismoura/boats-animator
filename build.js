@@ -50,7 +50,7 @@ var manifest = require('./package.json'),
       version: "0.35.4",
       flavor: "normal",
       platforms: cmdOptions.platforms.split(","),
-      buildDir: "bin/Boats-Animator",
+      buildDir: "bin",
       macIcns: "icons/icon.icns",
       winVersionString: {
         'CompanyName': "Boats Animator Developers",
@@ -59,7 +59,7 @@ var manifest = require('./package.json'),
         'LegalCopyright': "© 2019 Charlie Lee",
       },
       winIco: "icons/icon.ico",
-      buildType: function () {return this.appVersion;}
+      buildType: "Boats-Animator"
     };
 
     var nw = new NwBuilder(options);
@@ -168,7 +168,7 @@ function mac() {
 function windows() {
   if (options.platforms.includes("win32")) {
     // Rename the output directory
-    renameOutputDir(platform)
+    renameOutputDir("win32")
     .then((outputDir) => {
       if (process.platform === "win32" && extras.includes("exe")) {
         // Create installer file using Inno Setup
@@ -204,10 +204,10 @@ function windows() {
  * @param {String} platform 
  */
 function renameOutputDir(platform) {
-  var newDirName = `${options.buildDir}/${manifest.name}-${manifest.version}-${platform}`;
+  var newDirName = `${options.buildDir}/${options.buildType}/${manifest.name}-${manifest.version}-${platform}`;
 
   return new Promise(function(resolve, reject) {
-    fs.rename(`${options.buildDir}/${platform}`, newDirName, function(err) {
+    fs.rename(`${options.buildDir}/${options.buildType}/${platform}`, newDirName, function(err) {
       if (err) {
         console.error(err);
         reject("Error renaming directory")
@@ -216,7 +216,7 @@ function renameOutputDir(platform) {
         resolve(newDirName);
       }
     });
-  }
+  });
 }
 
 /**
